@@ -154,7 +154,7 @@ namespace Fusee.Tutorial.Core
             };
         }
 
-       public static ShaderEffect MakeShaderEffect(float3 diffuseColor, float3 specularColor, float shininess)
+        public static ShaderEffect MakeShaderEffect(float3 diffuseColor, float3 specularColor, float shininess)
         {
             MaterialComponent temp = new MaterialComponent
             {
@@ -168,14 +168,93 @@ namespace Fusee.Tutorial.Core
                     Shininess = shininess
                 }
             };
-
             return ShaderCodeBuilder.MakeShaderEffectFromMatComp(temp);
         }
 
-
         public static Mesh CreateCylinder(float radius, float height, int segments)
         {
-            return CreateConeFrustum(radius, radius, height, segments);
+            float3[] verts = new float3[4*segments+2];
+            float3[] norms = new float3[4*segments+2];
+            ushort[] tris  = new ushort[segments * 12];
+
+            float delta = 2 * M.Pi / segments;
+
+            // The center (store at the last position in the vertex array (index 'segments'))
+            verts[4*segments] = new float3(0, height/(-2),0);
+            norms[4*segments] = float3.UnitY*(-1);
+
+            verts[4*segments+1] = new float3(0, height/2, 0);
+            norms[4*segments+1] = float3.UnitY;
+
+            // The first and last point (first point in the list (index 0))
+            verts[0] = new float3(radius, height/(-2), 0);
+            norms[0] = float3.UnitY*(-1);
+
+            verts[1] = new float3(radius, height/(-2), 0);
+            norms[1] = float3.UnitX;
+
+            verts[2] = new float3(radius, height/2, 0);
+            norms[2] = float3.UnitY;
+
+            verts[3] = new float3(radius, height/2, 0);
+            norms[3] = float3.UnitX;
+
+            for (int i = 1; i < segments; i++)
+            {
+                // Create the current point and store it at index i
+                verts[i*4] = new float3(radius * M.Cos(i * delta), height/(-2), radius * M.Sin(i * delta));
+                norms[i*4] = float3.UnitY*(-1);
+
+                verts[i*4+1] = new float3(radius * M.Cos(i * delta), height/(-2), radius * M.Sin(i * delta));
+                norms[i*4+1] = new float3( M.Cos(i * delta), 0, M.Sin(i * delta));
+
+                verts[i*4+2] = new float3(radius * M.Cos(i * delta), height/2, radius * M.Sin(i * delta));
+                norms[i*4+2] = float3.UnitY;
+
+                verts[i*4+3] = new float3(radius * M.Cos(i * delta), height/2, radius * M.Sin(i * delta));
+                norms[i*4+3] = new float3(M.Cos(i * delta), 0, M.Sin(i * delta));
+
+                // Stitch the current segment (using the center, the current and the previous point)
+                tris[12*i - 1] = (ushort) (segments*4); 
+                tris[12*i - 2] = (ushort)  (i*4);        
+                tris[12*i - 3] = (ushort) (4*(i-1));  
+
+                tris[12*i - 4] = (ushort) ((i-1)*4+1); 
+                tris[12*i - 5] = (ushort) ((i-1)*4+3);        
+                tris[12*i - 6] = (ushort) (i*4+1);
+
+                tris[12*i - 7] = (ushort) (i*4+3); 
+                tris[12*i - 8] = (ushort) (i*4+1);       
+                tris[12*i - 9] = (ushort) ((i-1)*4+3);
+
+                tris[12*i - 10] = (ushort) (segments*4+1); 
+                tris[12*i - 11] = (ushort) (i*4+2);       
+                tris[12*i - 12] = (ushort) ((i-1)*4+2);   
+            }
+
+            // Stitch the last segment
+            tris[12 * segments - 1] = (ushort)(segments*4);          
+            tris[12 * segments - 2] = (ushort) 0;               
+            tris[12 * segments - 3] = (ushort)(segments*4-4);    
+
+            tris[12 * segments - 4] = (ushort)3;          
+            tris[12 * segments - 5] = (ushort)1;                 
+            tris[12 * segments - 6] = (ushort)(segments*4-1);
+
+            tris[12 * segments - 7] = (ushort)(segments*4-3);          
+            tris[12 * segments - 8] = (ushort)(segments*4-1);                 
+            tris[12 * segments - 9] = (ushort)1; 
+
+            tris[12 * segments - 10] = (ushort)((segments-1)*4+2);          
+            tris[12 * segments - 11] = (ushort)(segments*4+1);                 
+            tris[12 * segments - 12] = (ushort)2;
+
+            return new Mesh
+            {
+                Vertices = verts,
+                Normals = norms,
+                Triangles = tris,
+            };
         }
 
         public static Mesh CreateCone(float radius, float height, int segments)
@@ -187,7 +266,6 @@ namespace Fusee.Tutorial.Core
         {
             throw new NotImplementedException();
         }
-
 
         public static Mesh CreatePyramid(float baselen, float height)
         {

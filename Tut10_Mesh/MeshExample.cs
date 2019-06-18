@@ -42,14 +42,14 @@ namespace Fusee.Tutorial.Core
                             // TRANSFROM COMPONENT
                             _baseTransform,
 
-                            // SHADER EFFECT COMPONENT
+                           // SHADER EFFECT COMPONENT
                             new ShaderEffectComponent
                             {
                                 Effect = SimpleMeshes.MakeShaderEffect(new float3(0.7f, 0.7f, 0.7f), new float3(1, 1, 1), 5)
                             },
 
                             // MESH COMPONENT
-                            SimpleMeshes.CreateCuboid(new float3(10, 10, 10))
+                            SimpleMeshes.CreateCylinder(5, 10, 8)
                         }
                     },
                 }
